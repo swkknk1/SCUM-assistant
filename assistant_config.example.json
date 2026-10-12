@@ -39,7 +39,12 @@
         "buy_vehicle": {
             "enabled": true,
             "triggers": ["!bc", "bc", "!buycar", "buycar", "!买车", "买车", "提车"],
-            "description": "消耗游戏币一键在身边刷出载具"
+            "description": "消耗游戏币一键在身边刷出满配载具"
+        },
+        "buy_item": {
+            "enabled": true,
+            "triggers": ["!buy", "buy", "!shop", "shop", "!买", "买", "!购买", "购买", "!物资", "物资"],
+            "description": "消耗游戏币一键在身边购买物资/装备 (安静生成不全服通报)"
         }
     },
     "vehicles": {
@@ -81,9 +86,40 @@
             ]
         }
     },
+    "items": {
+        "1": {
+            "name": "巴雷特M82重狙",
+            "item_id": "Weapon_M82A1",
+            "count": 1,
+            "cost": 15000,
+            "aliases": ["1", "m82", "巴雷特", "大狙"]
+        },
+        "2": {
+            "name": ".50穿甲弹药箱",
+            "item_id": "Cal_50_BMG_Ammobox",
+            "count": 2,
+            "cost": 4000,
+            "aliases": ["2", "50bmg", "大狙子弹", "狙击弹"]
+        },
+        "3": {
+            "name": "军用大急救箱",
+            "item_id": "Emergency_Bandage_Big",
+            "count": 2,
+            "cost": 2500,
+            "aliases": ["3", "med", "急救包", "绷带"]
+        },
+        "4": {
+            "name": "高级工具箱",
+            "item_id": "Tool_Box",
+            "count": 1,
+            "cost": 5000,
+            "aliases": ["4", "toolbox", "工具箱"]
+        }
+    },
     "auto_execute": true,
     "welcome_announcement": true,
     "kill_announcement": true,
     "announce_npc_kills": false,
+    "announce_item_purchase": false,
     "sound_alert": false
 }

@@ -252,6 +252,11 @@ DEFAULT_CONFIG = {
             "enabled": True,
             "triggers": ["!bc", "bc", "!buycar", "buycar", "!买车", "买车", "提车"],
             "description": "消耗游戏币一键在身边刷出满配载具"
+        },
+        "buy_item": {
+            "enabled": True,
+            "triggers": ["!buy", "buy", "!shop", "shop", "!买", "买", "!购买", "购买", "!物资", "物资"],
+            "description": "消耗游戏币一键在身边购买物资/装备 (安静生成不全服通报)"
         }
     },
 
@@ -277,11 +282,44 @@ DEFAULT_CONFIG = {
         }
     },
 
+    # 可购买物资/装备商品库 (支持服主照着模板自由增减、改名、改价、改ID与别名)
+    "items": {
+        "1": {
+            "name": "巴雷特M82重狙",
+            "item_id": "Weapon_M82A1",
+            "count": 1,
+            "cost": 15000,
+            "aliases": ["1", "m82", "巴雷特", "大狙"]
+        },
+        "2": {
+            "name": ".50穿甲弹药箱",
+            "item_id": "Cal_50_BMG_Ammobox",
+            "count": 2,
+            "cost": 4000,
+            "aliases": ["2", "50bmg", "大狙子弹", "狙击弹"]
+        },
+        "3": {
+            "name": "军用大急救箱",
+            "item_id": "Emergency_Bandage_Big",
+            "count": 2,
+            "cost": 2500,
+            "aliases": ["3", "med", "急救包", "绷带"]
+        },
+        "4": {
+            "name": "高级工具箱",
+            "item_id": "Tool_Box",
+            "count": 1,
+            "cost": 5000,
+            "aliases": ["4", "toolbox", "工具箱"]
+        }
+    },
+
     # 功能开关
     "auto_execute": True,          # 是否开启全自动发送 (True: 聚焦时秒发; False: 需按 F1 确认)
     "welcome_announcement": True,  # 玩家上线全服欢迎通报
     "kill_announcement": True,     # PvP击杀与超远距离狙杀全服通报
     "announce_npc_kills": False,   # 是否播报被丧尸/NPC杀死的事件 (默认关闭防止刷屏)
+    "announce_item_purchase": False, # 是否全服通报购买商品成功 (默认False关闭，安静生成不刷屏)
     "sound_alert": False           # 指令入队时是否有系统蜂鸣声提示
 }
 
@@ -659,6 +697,9 @@ class AssistantEngine:
         bc_trig = first_trig("buy_vehicle", "!BC")
         if bc_trig: items.append(f"{bc_trig}(买车)")
 
+        buy_trig = first_trig("buy_item", "!buy")
+        if buy_trig: items.append(f"{buy_trig}(买装备)")
+
         return "#Announce [指令] " + " | ".join(items)
 
     def match_vehicle(self, arg: str):
@@ -671,6 +712,18 @@ class AssistantEngine:
             for alias in vdata.get("aliases", []):
                 if arg_clean == alias.lower():
                     return vdata
+        return None
+
+    def match_item(self, arg: str):
+        """匹配玩家输入的买物资/商品参数 (支持按编号 1/2/3 或中英文别名匹配)"""
+        arg_clean = arg.strip().lower()
+        items_cfg = self.config.get("items", {})
+        for key, idata in items_cfg.items():
+            if arg_clean == key.lower():
+                return idata
+            for alias in idata.get("aliases", []):
+                if arg_clean == alias.lower():
+                    return idata
         return None
 
     def handle_chat(self, steam_id: str, name: str, msg: str):
@@ -891,6 +944,72 @@ class AssistantEngine:
                 f"#Announce [一键提车] 崭新的 {veh_name} 已空降在 {name} 身边！({cost_tip})",
                 "提车成功通知"
             )
+            return
+
+        # --------------------------------------------------------------------------------------
+        # 7. 一键购买物品/商城 (默认: !buy 1 / buy 1 / !shop / 买 1)
+        # --------------------------------------------------------------------------------------
+        matched_buy, buy_arg, buy_trig = self.match_cmd("buy_item", msg, has_arg=True)
+        if matched_buy:
+            # 未输入参数时显示商品列表菜单
+            if not buy_arg:
+                i_list = []
+                for k, v in self.config.get("items", {}).items():
+                    cost_val = v.get("cost", 0)
+                    cost_k = f"{cost_val // 1000}k" if cost_val >= 1000 else f"{cost_val}元"
+                    i_list.append(f"{buy_trig} {k}({v['name']}:{cost_k})")
+                menu_str = " | ".join(i_list)
+                self.queue_command(f"#Announce 【物资商城】{menu_str}", "商品菜单提示")
+                return
+
+            item_info = self.match_item(buy_arg)
+            if not item_info:
+                self.queue_command(
+                    f"#Announce [商城提示] 未知商品 [{buy_arg}]！输入 {buy_trig} 可查看所有商品列表",
+                    "商品匹配失败"
+                )
+                return
+
+            item_name = item_info["name"]
+            item_id = item_info["item_id"]
+            count = item_info.get("count", 1)
+            cost = item_info["cost"]
+
+            # 资金检查 (服主免扣费)
+            balance = get_player_balance(self.db_path, steam_id)
+            if str(steam_id) != self.admin_sid and balance < cost:
+                self.queue_command(
+                    f"#Announce [购买失败] {name} 余额不足 {cost} 元 (当前余额: {balance} 元)",
+                    "购买余额不足"
+                )
+                return
+
+            # 获取玩家位置
+            coords = get_player_coords(self.db_path, steam_id)
+            if not coords:
+                self.queue_command(
+                    f"#Announce [商城提示] 正在同步您的实时位置，请走动两步后再输入 {buy_trig} {buy_arg}",
+                    "商品坐标同步中"
+                )
+                return
+
+            x, y, z = coords
+            # 物资生成在玩家身边约 0.8 米处，略微抬高 0.15 米
+            spawn_x = x + 80.0
+            spawn_y = y + 80.0
+            spawn_z = z + 15.0
+
+            # 扣款
+            if str(steam_id) != self.admin_sid:
+                self.queue_command(f"#ChangeCurrencyBalance Normal -{cost} {name}", f"扣除购买费 {cost}")
+
+            # 刷出物品 (无需全服通报，直接安静生成在脚边)
+            spawn_cmd = f'#SpawnItem {item_id} {count} Location "{{X={spawn_x:.1f} Y={spawn_y:.1f} Z={spawn_z:.1f}}}"'
+            self.queue_command(spawn_cmd, f"为 {name} 刷出商品: {item_name} x{count}")
+
+            # 默认不全服通报购买成功 (满足隐私与防刷屏要求)
+            if self.config.get("announce_item_purchase", False):
+                self.queue_command(f"#Announce [物资购买] {name} 成功购买了 {item_name} x{count}", "购买成功通报")
             return
 
         # ======================================================================================
@@ -1133,9 +1252,10 @@ def print_banner(engine: AssistantEngine):
     print(f"  [2] 基地回城: {get_cmd_repr('set_home', '!sethome')} (设家) / {get_cmd_repr('home', '!home')} (回城)")
     print(f"  [3] 福利查询: {get_cmd_repr('welfare', '!free')}")
     print(f"  [4] 一键购车: {get_cmd_repr('buy_vehicle', '!bc')} 1(摩托) / 2(皮卡) / 3(飞机)")
-    print(f"  [5] 编号列表: {get_cmd_repr('player_list', '!p')}")
-    print(f"  [6] 菜单帮助: {get_cmd_repr('help', '!help')}")
-    print(f"  [7] 广播播报: 进服欢迎通报、PvP与神射远狙击杀通报")
+    print(f"  [5] 一键买物: {get_cmd_repr('buy_item', '!buy')} 1(巴雷特) / 2(弹药) / 3(急救包)")
+    print(f"  [6] 编号列表: {get_cmd_repr('player_list', '!p')}")
+    print(f"  [7] 菜单帮助: {get_cmd_repr('help', '!help')}")
+    print(f"  [8] 广播播报: 进服欢迎通报、PvP与神射远狙击杀通报")
     print("-" * 70)
     print("控制快捷键:")
     print("  [F1 键]: 手动确认并立即执行下一条待发指令")

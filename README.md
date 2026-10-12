@@ -31,6 +31,10 @@
   支持新人进服赠送免费传送次数（可配置）。免费次数耗尽后，自动读取 `SCUM.db` 玩家银行现金余额并扣费，余额不足自动拦截。服主享有无限免费特权。
 - 🚗 **一键空降全配载具 (Vehicle Delivery)**  
   支持玩家自助购车（摩托、皮卡、水陆两栖飞机等），扣除对应游戏币后在玩家身边坐标精确生成满油、满电、满配件的崭新载具。
+- 📦 **物资与装备商城 (Item Shop / !buy)**  
+  支持玩家自助购买枪械、弹药、急救包、高级工具箱等，扣除金币后**安静生成在玩家脚边**（默认不进行全服广播，保护玩家隐私且避免聊天刷屏）。
+- 📑 **内置全品类物品与载具 ID 手册 ([`item_ids/`](./item_ids/README.md))**  
+  项目自带分类整理好的枪械、弹药、护甲、药品、工具、食物、载具等完整蓝图 ID 手册，服主照着模板复制粘贴即可扩充商城！
 - 📢 **全服实时公告与击杀通报 (Announcements)**  
   - 新人进服欢迎播报（附带当前在线人数与福利提示）。
   - PvP 击杀与超过 100 米的神射远狙全服通报，内置武器名称本地化美化字典。
@@ -162,6 +166,11 @@ python scum_assistant.py
             "enabled": true,
             "triggers": ["!bc", "bc", "!buycar", "buycar", "!买车", "买车", "提车"],
             "description": "消耗游戏币一键在身边刷出载具"
+        },
+        "buy_item": {
+            "enabled": true,
+            "triggers": ["!buy", "buy", "!shop", "shop", "!买", "买", "!购买", "购买", "!物资", "物资"],
+            "description": "消耗游戏币一键在身边购买物资/装备 (安静生成不全服通报)"
         }
     },
 
@@ -187,12 +196,45 @@ python scum_assistant.py
         }
     },
 
+    // 一键购买物资与装备商品库 (可参考 item_ids 目录自由增减任何物品)
+    "items": {
+        "1": {
+            "name": "巴雷特M82重狙",
+            "item_id": "Weapon_M82A1",
+            "count": 1,
+            "cost": 15000,
+            "aliases": ["1", "m82", "巴雷特", "大狙"]
+        },
+        "2": {
+            "name": ".50穿甲弹药箱",
+            "item_id": "Cal_50_BMG_Ammobox",
+            "count": 2,
+            "cost": 4000,
+            "aliases": ["2", "50bmg", "大狙子弹", "狙击弹"]
+        },
+        "3": {
+            "name": "军用大急救箱",
+            "item_id": "Emergency_Bandage_Big",
+            "count": 2,
+            "cost": 2500,
+            "aliases": ["3", "med", "急救包", "绷带"]
+        },
+        "4": {
+            "name": "高级工具箱",
+            "item_id": "Tool_Box",
+            "count": 1,
+            "cost": 5000,
+            "aliases": ["4", "toolbox", "工具箱"]
+        }
+    },
+
     // 功能开关
-    "auto_execute": true,          // 是否开启全自动发送 (true: 激活窗口秒发; false: 需按 F1 确认)
-    "welcome_announcement": true,  // 进服欢迎通报
-    "kill_announcement": true,     // PvP 击杀与远狙播报
-    "announce_npc_kills": false,   // 是否播报丧尸击杀 (默认关闭防止刷屏)
-    "sound_alert": false           // 指令入队是否有蜂鸣提示音
+    "auto_execute": true,            // 是否开启全自动发送 (true: 激活窗口秒发; false: 需按 F1 确认)
+    "welcome_announcement": true,    // 进服欢迎通报
+    "kill_announcement": true,       // PvP 击杀与远狙播报
+    "announce_npc_kills": false,     // 是否播报丧尸击杀 (默认关闭防止刷屏)
+    "announce_item_purchase": false, // 是否全服通报购买商品成功 (默认 false 关闭，安静生成在脚边不刷屏)
+    "sound_alert": false             // 指令入队是否有蜂鸣提示音
 }
 ```
 
@@ -202,6 +244,8 @@ python scum_assistant.py
   在 `commands.player_list.triggers` 中保留 `["p", "!p"]` 即可，玩家在游戏聊天打 `p` 就会立即触发查询！
 - **我想让玩家输入 `传 2` 就能传送：**  
   在 `commands.teleport.triggers` 中添加 `"传"`，玩家输入 `传 2` 即可直接传送到编号为 2 的队友身边！
+- **我想在商城添加新物品（如夜视仪、AK47、食物）：**  
+  直接查看项目内的 **[`item_ids/`](./item_ids/README.md)** 手册，照着 `items` 的格式复制粘贴即可，零代码修改！
 - **我不希望玩家可以使用买车功能：**  
   直接将 `commands.buy_vehicle.enabled` 设置为 `false` 即可一键禁用。
 
