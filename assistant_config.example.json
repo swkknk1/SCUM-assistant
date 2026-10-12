@@ -1,0 +1,89 @@
+{
+    "admin_steam_id": "YOUR_64_BIT_STEAM_ID_HERE",
+    "server_dir": "",
+    "teleport_cost": 4000,
+    "home_teleport_cost": 4000,
+    "free_teleport_count": 1,
+    "free_home_count": 1,
+    "commands": {
+        "help": {
+            "enabled": true,
+            "triggers": ["!help", "!cmd", "!帮助", "!menu", "!指令", "help", "帮助"],
+            "description": "显示常用指令与帮助菜单"
+        },
+        "player_list": {
+            "enabled": true,
+            "triggers": ["!p", "p", "!list", "list", "!player", "!players", "!查", "查人", "在线"],
+            "description": "查询所有玩家的数字编号与在线列表"
+        },
+        "teleport": {
+            "enabled": true,
+            "triggers": ["!to", "to", "!tp", "tp", "!传", "传"],
+            "description": "传送到指定编号或名字的队友身旁"
+        },
+        "set_home": {
+            "enabled": true,
+            "triggers": ["!sethome", "sethome", "!sh", "sh", "!设家", "设家", "定点"],
+            "description": "记录当前站立坐标为基地/家"
+        },
+        "home": {
+            "enabled": true,
+            "triggers": ["!home", "home", "!h", "h", "!回家", "回家", "回城"],
+            "description": "传送回自己设置的基地坐标"
+        },
+        "welfare": {
+            "enabled": true,
+            "triggers": ["!free", "free", "!welfare", "!福利", "福利", "!免费", "免费"],
+            "description": "查看自己剩余的免费传送次数"
+        },
+        "buy_vehicle": {
+            "enabled": true,
+            "triggers": ["!bc", "bc", "!buycar", "buycar", "!买车", "买车", "提车"],
+            "description": "消耗游戏币一键在身边刷出载具"
+        }
+    },
+    "vehicles": {
+        "1": {
+            "name": "巡航摩托",
+            "model": "BPC_Cruiser",
+            "cost": 12000,
+            "aliases": [
+                "1",
+                "moto",
+                "cruiser",
+                "摩托",
+                "摩托车"
+            ]
+        },
+        "2": {
+            "name": "雷杰皮卡",
+            "model": "BPC_Rager",
+            "cost": 35000,
+            "aliases": [
+                "2",
+                "rager",
+                "car",
+                "pickup",
+                "皮卡",
+                "汽车"
+            ]
+        },
+        "3": {
+            "name": "水陆两栖飞机",
+            "model": "BPC_Kinglet_Mariner",
+            "cost": 68000,
+            "aliases": [
+                "3",
+                "plane",
+                "mariner",
+                "飞机",
+                "水陆飞机"
+            ]
+        }
+    },
+    "auto_execute": true,
+    "welcome_announcement": true,
+    "kill_announcement": true,
+    "announce_npc_kills": false,
+    "sound_alert": false
+}

@@ -1,0 +1,40 @@
+# ==============================================================================
+# SCUM Dedicated Server & Companion Assistant - Git Ignore
+# ==============================================================================
+
+# Python 缓存与临时文件
+__pycache__/
+*.py[cod]
+*$py.class
+*.spec
+dist/
+build/
+*.egg-info/
+
+# 运行数据与敏感配置文件 (防止将玩家数据、坐标、服主SteamID泄露至开源仓库)
+homes.json
+player_data.json
+assistant_config.json
+
+# SCUM 服务端与 SteamCMD (文件体积极大，包含游戏专有二进制与资产)
+server/
+steamcmd/
+steamcmd.zip
+*.exe
+*.dll
+*.pak
+*.pdb
+
+# 服务端日志与数据库 (包含实时玩家坐标与聊天记录)
+*.log
+*.db
+*.db-wal
+*.db-shm
+*.bak
+
+# Windows 系统文件与 IDE 配置
+.vscode/
+.idea/
+Thumbs.db
+Desktop.ini
+*.tmp
